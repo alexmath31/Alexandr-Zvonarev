@@ -1,0 +1,410 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <algorithm>
+#include <iostream>
+#include "graphics.h"
+
+#define W_KN  300
+#define H_KN  50
+#define W_K 70
+#define H_K 100
+
+using namespace std;
+
+typedef struct button{
+   int x, y;
+   int width, height;
+   char name[40];
+   int namex, namey;
+} button;
+
+
+typedef struct hand{
+   int value;
+   IMAGE *kartinka;
+}hand;
+
+void game();//œÓˆÂ‰Û‡ Ë„˚
+void program();//Œ ÔÓ„‡ÏÏÂ
+void rules();//œ‡‚ËÎ‡
+void draw_button(int i);// ŒÚËÒÓ‚Í‡ ÍÌÓÔÓÍ
+void click_button();//œÓ‚ÂÍ‡ Ì‡Ê‡Ú‡ ÎË ÍÌÓÔÍ‡
+void start();//Õ‡˜‡ÎÓ Ë„˚
+void start_kard();
+void zap_ruk (int npl, int nk);
+void hod_comp ();
+void start_game ();
+void otvet_igr();
+bool cmp (hand a, hand b);
+void clear_im ();
+void hod_igroka();
+void beru_bito();
+void dop_ruk();
+
+button b[5] = {{475, 150, W_KN, H_KN, "»„‡", 75, 25},
+                     {475, 200, W_KN, H_KN, "œ‡‚ËÎ‡", 60, 25},
+                     {475, 250, W_KN, H_KN, "Œ ÔÓ„‡ÏÏÂ", 10, 25},
+                     {475, 300, W_KN, H_KN, "¬˚ıÓ‰", 85, 25},
+                     {1000, 600, W_KN - 100, H_KN, "Õ‡Á‡‰", 35, 25}};
+button card_igr[6] = {{510, 122, W_K, H_K, "1", 0, 0},
+                              {510, 244, W_K, H_K, "2", 0, 0},
+                              {510, 366, W_K, H_K, "3", 0, 0},
+                              {510, 488, W_K, H_K, "4", 0, 0},
+                              {510, 610, W_K, H_K, "5", 0, 0},
+                              {510, 732, W_K, H_K, "6", 0, 0},};
+button card_stol[6] = {{305, 122, W_K, H_K, "1", 0, 0},
+                              {305, 244, W_K, H_K, "2", 0, 0},
+                              {305, 366, W_K, H_K, "3", 0, 0},
+                              {305, 488, W_K, H_K, "4", 0, 0},
+                              {305, 610, W_K, H_K, "5", 0, 0},
+                              {305, 732, W_K, H_K, "6", 0, 0},};
+button beru1 = {510, 1127, W_KN - 100, H_KN, "¡ÂÛ", 35, 25}, bito1 = {570, 1127, W_KN - 100, H_KN, "¡ËÚÓ", 35, 25};
+hand player[10], comp[10], igr_stol[12];
+hand all_cards [36];
+                     
+int x, y, p = 0, g = 0, kozir;
+int npll = 0, ncomputer = 0, nall = 36, nigr = 0, q; 
+int hod = rand () % 2 + 1;
+bool bito = 0, beru = 0;
+int main(){
+   
+   kozir = rand () % 4 + 1;
+   q = rand() % 9 + 10 * (kozir - 1);
+   
+   initwindow(1280, 720, "ÃÂÌ˛", 100, 100);
+   setbkcolor(WHITE);
+   clearviewport();
+   start_kard();
+   zap_ruk (6, 6);
+   start();
+   
+   while(1){
+      printf("%d %d %d\n", x, y, p);
+      x = mousex();
+      y = mousey();
+      if(mousebuttons() == 1){
+         click_button();
+      }
+   }
+   
+   getch();
+   closegraph();
+}
+
+
+void start(){
+   setcolor(BLACK);
+   setbkcolor(WHITE);
+   settextstyle(8, 0, 4);
+   outtextxy(530, 10, "ÃÂÌ˛ Ë„˚");
+   for(int i = 0; i < 4; i++){
+      draw_button(i);
+   }
+}
+
+void click_button(){
+   for(int i = 0; i < 5; i++)
+      if(b[i].x <= x && b[i].x + b[i].width >= x && b[i].y <= y && b[i].y + b[i].height >= y){
+         if(i == 0 && p == 0){
+            setbkcolor(WHITE);
+            clearviewport();
+            game();
+            g = 1;
+            p == 1;
+         }
+         else if(i == 1 && p == 0){
+            setbkcolor(WHITE);
+            clearviewport();
+            rules();
+            p = 1;
+         }
+         else if(i == 2 && p == 0){
+            setbkcolor(WHITE);
+            clearviewport();
+            program();
+            p = 1;
+         }
+         else if(i == 3 && p == 0){
+            exit(1);
+            p = 1;
+         }
+         else if(i == 4 && p != 0){
+            setbkcolor(WHITE);
+            clearviewport();
+            start();
+            p = 0;
+         }
+      }
+}
+
+void draw_button(int i){
+   setfillstyle(SOLID_FILL, WHITE);
+   setcolor(BLACK);
+   setbkcolor(WHITE);
+   bar(b[i].x, b[i].y, b[i].x + b[i].width, b[i].y + b[i].height);
+   settextstyle(8, 0, 4);
+   outtextxy(b[i].namex + b[i].x, b[i].namey + b[i].y, b[i].name);
+}
+
+void rules(){
+   setcolor(BLACK);
+   setbkcolor(WHITE);
+   settextstyle(8, 0, 1);
+   outtextxy(10, 100, "¬ ıÓ‰Â Ë„˚ Ë„ÓÍ ÍÎ‡‰∏Ú Ì‡ ÒÚÓÎ Î˛·Û˛ ËÁ ËÏÂ˛˘ËıÒˇ Û ÌÂ„Ó Í‡ÚÛ ÎË·Ó, ÌÂÒÍÓÎ¸ÍÓ Í‡Ú Ó‰ËÌ‡ÍÓ‚Ó„Ó ‰ÓÒÚÓËÌÒÚ‚‡,");
+   outtextxy(10, 150, "‡ ÓÚ·Ë‚‡˛˘ËÈÒˇ Ë„ÓÍ (Ë„ÓÍ, ÔÓ‰ ÍÓÚÓÓ„Ó Ò‰ÂÎ‡Ì Á‡ıÓ‰) ‰ÓÎÊÂÌ ÎË·Ó ÔÓ·ËÚ¸ Â∏, ÎË·Ó ‚ÁˇÚ¸.");
+   draw_button(4);
+} 
+
+void program(){
+   setcolor(BLACK);
+   setbkcolor(WHITE);
+   settextstyle(8, 0, 2);
+   outtextxy(100, 100, "¬˚ÔÓÎÌËÎ «‚ÓÌ‡Â‚ ¿≈ 2021 ÂÚ 113");
+   draw_button(4);
+}
+ 
+bool cmp (hand a, hand b1){
+   return a.value > b1.value;
+   }
+
+void start_kard (){
+   int k = 0;
+   if (kozir == 1)
+      k = 10;
+   all_cards[0].value = 1 + k;all_cards[0].kartinka = loadBMP("B6.bmp");
+   all_cards[1].value = 2 + k;all_cards[1].kartinka = loadBMP("B7.bmp");
+   all_cards[2].value = 3 + k;all_cards[2].kartinka = loadBMP("B8.bmp");
+   all_cards[3].value = 4 + k;all_cards[3].kartinka = loadBMP("B9.bmp");
+   all_cards[4].value = 5 + k;all_cards[4].kartinka = loadBMP("B10.bmp");
+   all_cards[5].value = 6 + k;all_cards[5].kartinka = loadBMP("BJ.bmp");
+   all_cards[6].value = 7 + k;all_cards[6].kartinka = loadBMP("BQ.bmp");
+   all_cards[7].value = 8 + k;all_cards[7].kartinka = loadBMP("BK.bmp");
+   all_cards[8].value = 9 + k;all_cards[8].kartinka = loadBMP("BA.bmp");
+   k = 0;
+   if (kozir == 2)
+      k = 10;
+   all_cards[9].value = 1 + k;all_cards[9].kartinka = loadBMP("C6.bmp");
+   all_cards[10].value = 2 + k;all_cards[10].kartinka = loadBMP("C7.bmp");
+   all_cards[11].value = 3 + k;all_cards[11].kartinka = loadBMP("C8.bmp");
+   all_cards[12].value = 4 + k;all_cards[12].kartinka = loadBMP("C9.bmp");
+   all_cards[13].value = 5 + k;all_cards[13].kartinka = loadBMP("C10.bmp");
+   all_cards[14].value = 6 + k;all_cards[14].kartinka = loadBMP("CJ.bmp");
+   all_cards[15].value = 7 + k;all_cards[15].kartinka = loadBMP("CQ.bmp");
+   all_cards[16].value = 8 + k;all_cards[16].kartinka = loadBMP("CK.bmp");
+   all_cards[17].value = 9 + k;all_cards[17].kartinka = loadBMP("CA.bmp");
+   k = 0;
+   if (kozir == 3)
+      k = 10;
+   all_cards[18].value = 1 + k;all_cards[18].kartinka = loadBMP("K6.bmp");
+   all_cards[19].value = 2 + k;all_cards[19].kartinka = loadBMP("K7.bmp");
+   all_cards[20].value = 3 + k;all_cards[20].kartinka = loadBMP("K8.bmp");
+   all_cards[21].value = 4 + k;all_cards[21].kartinka = loadBMP("K9.bmp");
+   all_cards[22].value = 5 + k;all_cards[22].kartinka = loadBMP("K10.bmp");
+   all_cards[23].value = 6 + k;all_cards[23].kartinka = loadBMP("KJ.bmp");
+   all_cards[24].value = 7 + k;all_cards[24].kartinka = loadBMP("KQ.bmp");
+   all_cards[25].value = 8 + k;all_cards[25].kartinka = loadBMP("KK.bmp");
+   all_cards[26].value = 9 + k;all_cards[26].kartinka = loadBMP("KA.bmp");
+   k = 0;
+   if (kozir == 4)
+      k = 10;
+   all_cards[27].value = 1 + k;all_cards[27].kartinka = loadBMP("P6.bmp");
+   all_cards[28].value = 2 + k;all_cards[28].kartinka = loadBMP("P7.bmp");
+   all_cards[29].value = 3 + k;all_cards[29].kartinka = loadBMP("P8.bmp");
+   all_cards[30].value = 4 + k;all_cards[30].kartinka = loadBMP("P9.bmp");
+   all_cards[31].value = 5 + k;all_cards[31].kartinka = loadBMP("P10.bmp");
+   all_cards[32].value = 6 + k;all_cards[32].kartinka = loadBMP("PJ.bmp");
+   all_cards[33].value = 7 + k;all_cards[33].kartinka = loadBMP("PQ.bmp");
+   all_cards[34].value = 8 + k;all_cards[34].kartinka = loadBMP("PK.bmp");
+   all_cards[35].value = 9 + k;all_cards[35].kartinka = loadBMP("PA.bmp");
+}
+
+void zap_ruk (int npl, int nk){
+   for (int i = 0; i < npl; ++i){
+      if (nall == 0)
+         return;
+      int i1 = rand () % nall;
+      
+      player[npll] = all_cards [i1];
+      npll ++;
+      for (int j = i1; j < nall - 1; ++j)
+         all_cards [j] = all_cards[j + 1];
+      nall --;
+   }
+   for (int i = 0; i < nk; ++i){
+      if (nall == 0)
+         return;
+      int i1 = rand () % nall;
+      
+      comp[ncomputer] = all_cards [i1];
+      ncomputer ++;
+      for (int j = i1; j < nall - 1; ++j)
+         all_cards [j] = all_cards[j + 1];
+      nall --;
+   }
+}
+
+void beru_bito(){
+   while (1){
+      x = mousex();
+      y = mousey();
+      if(mousebuttons() == 1){
+         if(beru1.x <= x && beru1.x + beru1.width >= x && beru1.y <= y && beru1.y + beru1.height >= y)
+            beru = 1;
+          if(bito1.x <= x && bito1.x + bito1.width >= x && bito1.y <= y && bito1.y + bito1.height >= y)
+            beru = 1;
+          if (beru || bito)
+             return;
+      }
+    }
+}
+
+void dop_ruk(){
+    if (npll < 6 && ncomputer >= 6)
+         zap_ruk (6 - npll, 0);
+    if (npll >= 6 && ncomputer < 6)
+         zap_ruk (0, 6 - ncomputer);
+    if (npll < 6 && ncomputer < 6)
+         zap_ruk (6 - npll, 6 - ncomputer);
+   }
+
+void otvet_igr(){
+   while(!bito && !beru){
+      int i1 = 0;
+      printf("%d %d %d\n", x, y, p);
+      x = mousex();
+      y = mousey();
+      if(mousebuttons() == 1){
+         for(int i = 0; i < 6; i++)
+            if(card_igr[i].x <= x && card_igr[i].x + card_igr[i].width >= x && card_igr[i].y <= y && card_igr[i].y + card_igr[i].height >= y){
+                 putimage(card_stol[i1].x + 10, card_stol[i1].y, player[i].kartinka, COPY_PUT);
+                  for (int j = i; j < npll - 1; ++i)
+                     player[i] = player[i + 1];
+                  npll --;
+                  i1 ++;
+            }
+            beru_bito();
+            if (beru || bito){
+               nigr = 0;
+               return;
+            }
+      }
+   }
+}
+
+void hod_comp (){
+   sort (comp, comp + ncomputer, cmp);
+   int kol = 0;
+   for (int i = 0; i < ncomputer - 1; ++i)
+      if (comp[i].value == comp[i + 1].value)
+         kol ++;
+   for (int i = 0; i < kol; ++i){
+      igr_stol[nigr] = comp[i];
+      nigr ++;
+      }
+      ncomputer -= kol;
+   for (int i = 0; i < ncomputer; ++i)
+      comp[i] = comp[ncomputer + i - 1];
+   for (int i = 0; i < kol; ++i)
+      putimage (122 + 122*i, 305, igr_stol[i].kartinka, COPY_PUT);
+   otvet_igr();
+   dop_ruk();
+}
+
+void clear_im(){
+   for (int i = 0; i < 36; ++i)
+      freeimage(all_cards[i].kartinka);
+   for (int i = 0; i < 10; ++i)
+      freeimage(comp[i].kartinka);
+   for (int i = 0; i < 10; ++i)
+      freeimage(player[i].kartinka);
+   for (int i = 0; i < 6; ++i)
+      freeimage(igr_stol[i].kartinka);
+}
+
+void start_game (){
+  // IMAGE *basd2 =  loadBMP("beru.bmp");
+   //putimage(1127, 505, basd2, COPY_PUT);
+   IMAGE *obloshka =  loadBMP("Obr.bmp");
+   putimage(1127, 305, obloshka, COPY_PUT);
+   putimage(1132, 305, obloshka, COPY_PUT);
+   putimage(1137, 305, obloshka, COPY_PUT);
+   putimage(1047, 305, all_cards[q].kartinka, COPY_PUT);
+   for (int i = 0; i < 6; ++i){
+       putimage(122 + 122 * i, 105, obloshka, COPY_PUT);
+      }
+   for (int i = 0; i < 6; ++i){
+       putimage(122 + 122 * i, 510, player[i].kartinka, COPY_PUT);
+      }
+      freeimage(obloshka);
+   
+}
+
+void otvet_comp(){
+   sort (comp, comp + ncomputer, cmp);
+   bool f = 0;
+   for (int i = 0; i < nigr; ++i){
+      for (int j = 0; j < ncomputer; ++j){
+            if (comp[j].value > igr_stol[i].value){
+               putimage(card_stol[i].x + 10, card_stol[1].y, comp[j].kartinka, COPY_PUT);
+               for (int q1 = j; q1 < ncomputer - 1; ++q1)
+                  comp[q1] = comp [q1 + 1];
+               ncomputer --;
+               f = 1;
+               break;
+            }
+      }
+   }
+   if (!f){
+      for (int i = 0; i < nigr; ++i){
+         comp[ncomputer] = igr_stol[i];
+         ncomputer ++;
+      }
+      if (npll < 6)
+         zap_ruk (6 - npll, 0);
+   }
+   nigr = 0;
+}
+
+void hod_igroka (){
+      while (nigr == 0){
+         x = mousex();
+         y = mousey();
+         if(mousebuttons() == 1){
+            for(int i = 0; i < 6; i++)
+               if(card_igr[i].x <= x && card_igr[i].x + card_igr[i].width >= x && card_igr[i].y <= y && card_igr[i].y + card_igr[i].height >= y){
+                  igr_stol[nigr] = player[i];
+                  nigr ++;
+               }
+         }
+      }
+      for (int i = 0; i < nigr; ++i)
+         putimage (122 + 122*i, 305, igr_stol[i].kartinka, COPY_PUT);
+      otvet_comp();
+      dop_ruk();
+   }
+
+void game(){
+   int k = 0;
+   int t = 0; 
+   setactivepage(k);
+   setbkcolor(GREEN);
+   clearviewport();
+   start_game();
+   ++t;
+   setvisualpage(p); 
+   while(nall != 0 && (ncomputer != 0|| npll != 0)){
+      if (hod == 1){
+         hod_igroka();
+         hod = 0;
+      }
+      else{
+         hod_comp();
+         hod = 1;
+      }
+      delay(30);
+  }
+   clear_im();
+  exit (0);
+}
+
